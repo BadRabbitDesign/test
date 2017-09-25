@@ -1,14 +1,17 @@
-summary How to use Trac with mod_wsgi.
+# summary How to use Trac with mod_wsgi.
+
+https://code.google.com/archive/p/modwsgi/wikis/IntegrationWithTrac.wiki
+
 labels Phase-Deploy
 
 If you are using mod_wsgi, please consider making a donation.
 Integration With Trac
 
-Note: Requires Trac 0.10 or later.
+__Note: Requires Trac 0.10 or later.__
 
 Note: This is not intended as a basic tutorial on how to setup mod_wsgi. It is recommended you first read more introductory material for mod_wsgi. Start by reading through various documents linked off Installation Instructions.
 
-The Trac application provides the trac.web.main.dispatch_request() function for running Trac as a WSGI application. A script file for a Trac application which is compatible with mod_wsgi would be constructed as follows:
+The Trac application provides the __trac.web.main.dispatch_request()__ function for running Trac as a __WSGI__ application. A script file for a Trac application which is compatible with mod_wsgi would be constructed as follows:
 
 ``` 
 import os os.environ['TRAC_ENV'] = '/usr/local/trac/site-1'
@@ -18,11 +21,11 @@ import trac.web.main
 application = trac.web.main.dispatch_request 
 ```
 
-The TRAC_ENV environment variable should be set as appropriate for Trac to indicate where the Trac site instance has been installed in the filesystem.
+The __TRAC_ENV__ environment variable should be set as appropriate for Trac to indicate where the Trac site instance has been installed in the filesystem.
 
-If using the embedded application mode of mod_wsgi, because an application is run as the user that Apache runs as, if Python eggs are being used for Trac plugins it may not have the ability to create a cache directory in the default location. Therefore, it may be necessary to set the environment variable PYTHON_EGG_CACHE at the start of the script file to an appropriate directory where the Apache user has write permission and into which it can unpack egg files.
+If using the embedded application mode of mod_wsgi, because an application is run as the user that Apache runs as, if Python eggs are being used for Trac plugins it may not have the ability to create a cache directory in the default location. Therefore, it may be necessary to set the environment variable __PYTHON_EGG_CACHE__ at the start of the script file to an appropriate directory where the Apache user has write permission and into which it can unpack egg files.
 
-Because portable WSGI applications should never write to 'sys.stdout' directly or indirectly using 'print', by default mod_wsgi will restrict use of 'sys.stdout'. Some Trac plugins however are known to use 'print' to output debug information when they should not do so if they want to be able to work on all WSGI platforms. As such, as well as defining a directory for the Python egg cache, it may be necessary to override the mod_wsgi restriction on using 'sys.stdout' by mapping it to 'sys.stderr' instead.
+__Because portable WSGI applications should never write to 'sys.stdout' directly or indirectly using 'print', by default mod_wsgi will restrict use of 'sys.stdout'. Some Trac plugins however are known to use 'print' to output debug information when they should not do so if they want to be able to work on all WSGI platforms. As such, as well as defining a directory for the Python egg cache, it may be necessary to override the mod_wsgi restriction on using 'sys.stdout' by mapping it to 'sys.stderr' instead.__
 
 The script file may therefore need to be:
 
@@ -30,7 +33,9 @@ The script file may therefore need to be:
 import sys 
 sys.stdout = sys.stderr
 import os 
-os.environ['TRAC_ENV'] = '/usr/local/trac/site-1' os.environ['PYTHON_EGG_CACHE'] = '/usr/local/trac/site-1/eggs'
+os.environ['TRAC_ENV'] = '/usr/local/trac/site-1' 
+os.environ['PYTHON_EGG_CACHE'] = '/usr/local/trac/site-1/eggs'
+
 import trac.web.main
 application = trac.web.main.dispatch_request 
 ```
@@ -45,13 +50,13 @@ Order deny,allow
 Allow from all 
 ```
 
-This would result in the Trac site being accessible as '/trac'.
+This would result in the Trac site being accessible as __'/trac'__.
 
 The configuration shown presumes that an 'apache' subdirectory has been created within the Trac site instance and the script file stored there under the name 'trac.wsgi'. A separate directory is used, as it is necessary to indicate to Apache that it is allowed access to files in that directory, something you wouldn't want to do for all your Trac data.
 
 Do note that some versions of the Subversion Python bindings apparently have problems when being used from within secondary Python sub interpreters rather than the main Python interpreter. The result of this will be strange Python exceptions or the Apache child processes could even crash.
 
-To avoid such problems, the Trac application should be forced to run within the main Python interpreter. This can be done using the WSGIApplicationGroup directive with the value '%{GLOBAL}' as shown.
+To avoid such problems, the Trac application should be forced to run within the main Python interpreter. This can be done using the WSGIApplicationGroup directive with the value __'%{GLOBAL}'__ as shown.
 
 Because of the need to force Trac to run in the main Python interpreter, you can only run one Trac instance at a time if using the environment variable approach to configuring Trac. If needing to run multiple Trac instances, you need to use Trac's support for running multiple sites, use daemon mode of mod_wsgi and delegate each Trac instance to a separate daemon process group, or use the WSGI environment variable approach to configuring Trac.
 
@@ -66,7 +71,7 @@ Require valid-user
 </Location>
 ```
 
-If you are using a single Trac installation to host multiple projects, you could also set TRAC_ENV_PARENT_DIR instead of TRAC_ENV and refer to the parent filesystem directory where the sites are kept. The script file would then be:
+If you are using a single Trac installation to host multiple projects, you could also set __TRAC_ENV_PARENT_DIR__ instead of __TRAC_ENV__ and refer to the parent filesystem directory where the sites are kept. The script file would then be:
 
 ``` 
 import sys 
@@ -93,7 +98,7 @@ The benefit of running the multiple Trac instances in the same Python interprete
 
 The configuration shown presumes that an 'apache' subdirectory has been created outside the directory holding all the Trac sites. Similarly with the Python eggs directory.
 
-When hosting multiple sites in this way, Trac will automatically create you an index page for the parent URL of all the Trac sites with links to the individual sites. This will be accessible as '/trac', with the different Trac sites appearing as subdirectories of '/trac'.
+When hosting multiple sites in this way, Trac will automatically create you an index page for the parent URL of all the Trac sites with links to the individual sites. This will be accessible as __'/trac'__, with the different Trac sites appearing as subdirectories of __'/trac'__.
 
 If you wish to customise this index page, you should set the TRAC_ENV_INDEX_TEMPLATE environment variable to be the location of the template to use. For further details on customising this index page see Trac interface customisation page.
 
@@ -122,19 +127,23 @@ WSGIDaemonProcess site-1 user=trac group=trac threads=25
 WSGIScriptAlias /site-1 /usr/local/trac/site-1/apache/trac.wsgi
 
 WSGIProcessGroup site-1 
-WSGIApplicationGroup %{GLOBAL} Order deny,allow Allow from all
+WSGIApplicationGroup %{GLOBAL} 
+Order deny,allow 
+Allow from all
 
 WSGIDaemonProcess site-2 user=trac group=trac threads=25 
 WSGIScriptAlias /site-2 /usr/local/trac/site-2/apache/trac.wsgi
 
 WSGIProcessGroup site-2 
-WSGIApplicationGroup %{GLOBAL} Order deny,allow Allow from all 
+WSGIApplicationGroup %{GLOBAL} 
+Order deny,allow 
+Allow from all 
 ```
 
 In addition to configuring Trac using environment variables as shown above, Trac may also be configured by variables passed through the WSGI application environment. This may be done in a WSGI application wrapper, or by using the SetEnv directive within the Apache configuration files. The names of the WSGI application environment variables which are honoured and the equivalent Python environment variables are as follows:
 
 | WSGI Environment Variable     | Python Environment Variable     | 
-|:------------------------------|:--------------------------------| 
+|-------------------------------|---------------------------------| 
 |trac.env_path                  |TRAC_ENV                         | 
 |trac.env_parent_dir            |TRAC_ENV_PARENT_DIR              | 
 |trac.env_index_template        |TRAC_ENV_INDEX_TEMPLATE          | 
