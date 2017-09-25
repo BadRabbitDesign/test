@@ -10,11 +10,13 @@ Note: This is not intended as a basic tutorial on how to setup mod_wsgi. It is r
 
 The Trac application provides the trac.web.main.dispatch_request() function for running Trac as a WSGI application. A script file for a Trac application which is compatible with mod_wsgi would be constructed as follows:
 
-``` import os os.environ['TRAC_ENV'] = '/usr/local/trac/site-1'
+``` 
+import os os.environ['TRAC_ENV'] = '/usr/local/trac/site-1'
 
 import trac.web.main
 
-application = trac.web.main.dispatch_request ```
+application = trac.web.main.dispatch_request 
+```
 
 The TRAC_ENV environment variable should be set as appropriate for Trac to indicate where the Trac site instance has been installed in the filesystem.
 
@@ -24,19 +26,24 @@ Because portable WSGI applications should never write to 'sys.stdout' directly o
 
 The script file may therefore need to be:
 
-``` import sys sys.stdout = sys.stderr
-
-import os os.environ['TRAC_ENV'] = '/usr/local/trac/site-1' os.environ['PYTHON_EGG_CACHE'] = '/usr/local/trac/site-1/eggs'
-
+``` 
+import sys 
+sys.stdout = sys.stderr
+import os 
+os.environ['TRAC_ENV'] = '/usr/local/trac/site-1' os.environ['PYTHON_EGG_CACHE'] = '/usr/local/trac/site-1/eggs'
 import trac.web.main
-
-application = trac.web.main.dispatch_request ```
+application = trac.web.main.dispatch_request 
+```
 
 In either case, an example of how Apache could be configured for a single site would be:
 
-``` WSGIScriptAlias /trac /usr/local/trac/site-1/apache/trac.wsgi
+```
+WSGIScriptAlias /trac /usr/local/trac/site-1/apache/trac.wsgi
 
-WSGIApplicationGroup %{GLOBAL} Order deny,allow Allow from all ```
+WSGIApplicationGroup %{GLOBAL} 
+Order deny,allow 
+Allow from all 
+```
 
 This would result in the Trac site being accessible as '/trac'.
 
