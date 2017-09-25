@@ -57,23 +57,37 @@ Because of the need to force Trac to run in the main Python interpreter, you can
 
 If using Apache based authentication for Trac users, configuration similar to the following would also be required:
 
-<Location /trac/login> AuthType Basic AuthName "Trac Site 1" AuthUserFile /usr/local/trac/site-1/.htpasswd Require valid-user </Location>
+```
+<Location /trac/login> 
+AuthType Basic 
+AuthName "Trac Site 1" 
+AuthUserFile /usr/local/trac/site-1/.htpasswd 
+Require valid-user 
+</Location>
+```
 
 If you are using a single Trac installation to host multiple projects, you could also set TRAC_ENV_PARENT_DIR instead of TRAC_ENV and refer to the parent filesystem directory where the sites are kept. The script file would then be:
 
-``` import sys sys.stdout = sys.stderr
-
-import os os.environ['TRAC_ENV_PARENT_DIR'] = '/usr/local/trac/sites' os.environ['PYTHON_EGG_CACHE'] = '/usr/local/trac/eggs'
+``` 
+import sys 
+sys.stdout = sys.stderr
+import os os.environ['TRAC_ENV_PARENT_DIR'] = '/usr/local/trac/sites' 
+os.environ['PYTHON_EGG_CACHE'] = '/usr/local/trac/eggs'
 
 import trac.web.main
 
-application = trac.web.main.dispatch_request ```
+application = trac.web.main.dispatch_request
+```
 
 The Apache configuration for the case of hosting multiple sites within the one Trac instance would be:
 
-``` WSGIScriptAlias /trac /usr/local/trac/apache/trac.wsgi
+``` 
+WSGIScriptAlias /trac /usr/local/trac/apache/trac.wsgi
 
-WSGIApplicationGroup %{GLOBAL} Order deny,allow Allow from all ```
+WSGIApplicationGroup %{GLOBAL}
+Order deny,allow 
+Allow from all 
+```
 
 The benefit of running the multiple Trac instances in the same Python interpreter is that any Python modules are only loaded once for all sites, rather than each interpreter holding its own copy. This will result in less memory being used.
 
@@ -85,9 +99,13 @@ If you wish to customise this index page, you should set the TRAC_ENV_INDEX_TEMP
 
 Whether one site is being hosted or many sites, they need not be mounted as a sub directory of the URL namespace. To host a single site on the root of the web server the following could also be used:
 
-``` WSGIScriptAlias / /usr/local/trac/site-1/apache/trac.wsgi
+``` 
+WSGIScriptAlias / /usr/local/trac/site-1/apache/trac.wsgi
 
-WSGIApplicationGroup %{GLOBAL} Order deny,allow Allow from all ```
+WSGIApplicationGroup %{GLOBAL} 
+Order deny,allow 
+Allow from all 
+```
 
 Although Trac can be run using the embedded application mode of mod_wsgi, with the Trac parent directory support allowing for the hosting of multiple sites within the one interpreter, it is possibly preferable that it be run in conjunction with daemon process mode.
 
@@ -99,57 +117,103 @@ A final benefit of using daemon process mode, is that it would be possible to ru
 
 A configuration for running two distinct Trac instances, each using a single daemon process run as the user 'trac' would be:
 
-``` WSGIDaemonProcess site-1 user=trac group=trac threads=25 WSGIScriptAlias /site-1 /usr/local/trac/site-1/apache/trac.wsgi
+``` 
+WSGIDaemonProcess site-1 user=trac group=trac threads=25 
+WSGIScriptAlias /site-1 /usr/local/trac/site-1/apache/trac.wsgi
 
-WSGIProcessGroup site-1 WSGIApplicationGroup %{GLOBAL} Order deny,allow Allow from all
+WSGIProcessGroup site-1 
+WSGIApplicationGroup %{GLOBAL} Order deny,allow Allow from all
 
-WSGIDaemonProcess site-2 user=trac group=trac threads=25 WSGIScriptAlias /site-2 /usr/local/trac/site-2/apache/trac.wsgi
+WSGIDaemonProcess site-2 user=trac group=trac threads=25 
+WSGIScriptAlias /site-2 /usr/local/trac/site-2/apache/trac.wsgi
 
-WSGIProcessGroup site-2 WSGIApplicationGroup %{GLOBAL} Order deny,allow Allow from all ```
+WSGIProcessGroup site-2 
+WSGIApplicationGroup %{GLOBAL} Order deny,allow Allow from all 
+```
 
 In addition to configuring Trac using environment variables as shown above, Trac may also be configured by variables passed through the WSGI application environment. This may be done in a WSGI application wrapper, or by using the SetEnv directive within the Apache configuration files. The names of the WSGI application environment variables which are honoured and the equivalent Python environment variables are as follows:
 
-| WSGI Environment Variable | Python Environment Variable | |:------------------------------|:--------------------------------| |trac.env_path |TRAC_ENV | |trac.env_parent_dir |TRAC_ENV_PARENT_DIR | |trac.env_index_template |TRAC_ENV_INDEX_TEMPLATE | |trac.template_vars |TRAC_TEMPLATE_VARS | |trac.locale | |
+| WSGI Environment Variable     | Python Environment Variable     | 
+|:------------------------------|:--------------------------------| 
+|trac.env_path                  |TRAC_ENV                         | 
+|trac.env_parent_dir            |TRAC_ENV_PARENT_DIR              | 
+|trac.env_index_template        |TRAC_ENV_INDEX_TEMPLATE          | 
+|trac.template_vars             |TRAC_TEMPLATE_VARS               | 
+|trac.locale                    |                                 |
 
 If being done using a WSGI application wrapper as described, the WSGI script file would be written as:
 
-``` import trac.web.main
+``` 
+import trac.web.main
 
 _application = trac.web.main.dispatch_request
 
-def application(environ, start_response): environ['trac.env_path'] = '/usr/local/trac/site-1' return _application(environ, start_response) ```
+def application(environ, start_response): 
+environ['trac.env_path'] = '/usr/local/trac/site-1' 
+return _application(environ, start_response) 
+```
 
 An Apache configuration, using the SetEnv directives for configuring Trac, might alternatively be as follows:
 
-``` WSGIDaemonProcess site-1 user=trac group=trac threads=25 WSGIScriptAlias /site-1 /usr/local/trac/site-1/apache/trac.wsgi
+``` 
+WSGIDaemonProcess site-1 user=trac group=trac threads=25 
+WSGIScriptAlias /site-1 /usr/local/trac/site-1/apache/trac.wsgi
 
-WSGIProcessGroup site-1 WSGIApplicationGroup %{GLOBAL} SetEnv trac.env_path /usr/local/trac/site-1 Order deny,allow Allow from all
+WSGIProcessGroup site-1 
+WSGIApplicationGroup %{GLOBAL} 
+SetEnv trac.env_path /usr/local/trac/site-1 Order deny,allow Allow from all
 
-WSGIDaemonProcess site-2 user=trac group=trac threads=25 WSGIScriptAlias /site-2 /usr/local/trac/site-2/apache/trac.wsgi
+WSGIDaemonProcess site-2 user=trac group=trac threads=25 
+WSGIScriptAlias /site-2 /usr/local/trac/site-2/apache/trac.wsgi
 
-WSGIProcessGroup site-2 WSGIApplicationGroup %{GLOBAL} SetEnv trac.env_path /usr/local/trac/site-2 Order deny,allow Allow from all ```
+WSGIProcessGroup site-2 WSGIApplicationGroup %{GLOBAL} 
+SetEnv trac.env_path /usr/local/trac/site-2 
+Order deny,allow 
+Allow from all 
+```
 
 With this configuration, there is no need to set environment variables within the script file and the minimal WSGI script file show below could be used:
 
-``` import trac.web.main
+``` 
+import trac.web.main
 
-application = trac.web.main.dispatch_request ```
+application = trac.web.main.dispatch_request 
+```
 
 If wishing to host multiple sites within the one daemon process group, instead of using the TRAC_ENV_PARENT_DIR process environment variable, one can use the WSGI environment variable 'trac.env_parent_dir'.
 
-``` WSGIDaemonProcess sites user=trac group=trac processes=3 threads=25 WSGIScriptAlias /trac /usr/local/trac/apache/trac.wsgi
+``` 
+WSGIDaemonProcess sites user=trac group=trac processes=3 threads=25 
+WSGIScriptAlias /trac /usr/local/trac/apache/trac.wsgi
 
-WSGIProcessGroup sites WSGIApplicationGroup %{GLOBAL} SetEnv trac.env_parent_dir /usr/local/trac/sites Order deny,allow Allow from all ```
+WSGIProcessGroup sites 
+WSGIApplicationGroup %{GLOBAL} 
+SetEnv trac.env_parent_dir /usr/local/trac/sites 
+Order deny,allow 
+Allow from all
+```
 
 If wishing to automate the configuration so as to make it easier to manage a large number of Trac sites, where each runs in a distinct daemon process and as a different user, the following configuration may be more appropriate:
 
-``` WSGIDaemonProcess site-1 user=user-1 group=user-1 threads=25 WSGIDaemonProcess site-2 user=user-2 group=user-2 threads=25 WSGIDaemonProcess site-3 user=user-3 group=user-3 threads=25 WSGIDaemonProcess site-4 user=user-4 group=user-4 threads=25 WSGIDaemonProcess site-5 user=user-5 group=user-5 threads=25 WSGIDaemonProcess site-6 user=user-6 group=user-6 threads=25
+``` 
+WSGIDaemonProcess site-1 user=user-1 group=user-1 threads=25 
+WSGIDaemonProcess site-2 user=user-2 group=user-2 threads=25 
+WSGIDaemonProcess site-3 user=user-3 group=user-3 threads=25 
+WSGIDaemonProcess site-4 user=user-4 group=user-4 threads=25 
+WSGIDaemonProcess site-5 user=user-5 group=user-5 threads=25 
+WSGIDaemonProcess site-6 user=user-6 group=user-6 threads=25
 
-RewriteEngine On RewriteCond %{REQUEST_URI} ^/trac/([^/]+) RewriteRule . - [E=trac.process_group:%1,\ E=trac.env_path:/usr/local/trac/sites/%1]
+RewriteEngine On 
+RewriteCond %{REQUEST_URI} ^/trac/([^/]+) 
+RewriteRule . - [E=trac.process_group:%1,\ E=trac.env_path:/usr/local/trac/sites/%1]
 
 WSGIScriptAliasMatch ^/trac/([^/]+) /usr/local/trac/apache/trac.wsgi
 
-WSGIProcessGroup %{ENV:trac.process_group} WSGIApplicationGroup %{GLOBAL} Order deny,allow Allow from all ```
+WSGIProcessGroup %{ENV:trac.process_group} 
+WSGIApplicationGroup %{GLOBAL} 
+Order deny,allow 
+Allow from all 
+```
 
 In order to add a new Trac site, a new Trac instance directory would be created under the parent directory '/usr/local/trac/sites', a new WSGIDaemonProcess entry added to the Apache configuration file and Apache restarted. Changes are still required to the Apache configuration so as to add the directive related to the new daemon process and define the user and group of that process, but at least the changes have been limited to one line.
 
@@ -157,17 +221,25 @@ If not specifically needing the ability to delegate different instances of Trac 
 
 Where the the Trac mechanism for supporting multiple sites within the one interpreter is not flexible enough, then dynamically setting the WSGI environment variable 'trac.env_path' can also be done using a rewrite rule based on some part of the URL. Except for there being no automatically generated index page, an equivalent to Trac's own support for multiple sites would be as follows:
 
-``` WSGIDaemonProcess sites processes=3 threads=25 maximum-requests=1000
+``` 
+WSGIDaemonProcess sites processes=3 threads=25 maximum-requests=1000
 
 RewriteEngine On
 
-RewriteCond %{REQUEST_URI} ^/trac/([^/]+) RewriteCond /usr/local/trac/sites/%1/conf/trac.ini !-f RewriteRule . - [F]
+RewriteCond %{REQUEST_URI} ^/trac/([^/]+) 
+RewriteCond /usr/local/trac/sites/%1/conf/trac.ini !-f 
+RewriteRule . - [F]
 
-RewriteCond %{REQUEST_URI} ^/trac/([^/]+) RewriteRule . - [E=trac.env_path:/usr/local/trac/sites/%1]
+RewriteCond %{REQUEST_URI} ^/trac/([^/]+) 
+RewriteRule . - [E=trac.env_path:/usr/local/trac/sites/%1]
 
 WSGIScriptAliasMatch ^/trac/([^/]+) /usr/local/trac/apache/trac.wsgi
 
-WSGIProcessGroup sites WSGIApplicationGroup %{GLOBAL} Order deny,allow Allow from all ```
+WSGIProcessGroup sites 
+WSGIApplicationGroup %{GLOBAL} 
+Order deny,allow 
+Allow from all 
+```
 
 This configuration could be adapted as necessary where for example all Trac sites are not stored under the one directory but spread across the file system in different directories. This could be done through the rewrite rules directly or using a rewrite map file.
 
